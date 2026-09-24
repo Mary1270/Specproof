@@ -1,1 +1,355 @@
-.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SpecProof</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #12151c;
+    --border: #262b36;
+    --text: #e6e9ef;
+    --muted: #8890a0;
+    --accent: #6ee7b7;
+    --fail: #f87171;
+    --warn: #fbbf24;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 16px;
+  }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea {
+    width: 100%;
+    background: #0e1117;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+  textarea { min-height: 90px; resize: vertical; font-family: var(--mono); }
+  button {
+    background: var(--accent);
+    color: #06110c;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 12px;
+    width: 100%;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .row { display: flex; gap: 8px; }
+  .row > button { margin-top: 8px; }
+  .status-line {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 10px;
+    border-radius: 6px;
+    background: #0e1117;
+    border: 1px solid var(--border);
+    margin-top: 10px;
+    word-break: break-word;
+  }
+  .status-VERIFIED, .status-PASS { color: var(--accent); }
+  .status-FAILED, .status-FAIL { color: var(--fail); }
+  .status-INSUFFICIENT_EVIDENCE { color: var(--warn); }
+  .req-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+  }
+  .req-card .verdict { font-family: var(--mono); font-weight: 700; }
+  .muted { color: var(--muted); font-size: 0.8rem; }
+  .log {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: pre-wrap;
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 8px;
+  }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<h1>SpecProof</h1>
+<div class="subtitle">Evidence-based, consensus-verified software specification checking on GenLayer.</div>
+
+<div class="panel">
+  <div id="walletStatus" class="muted">Not connected.</div>
+  <button id="connectBtn">Connect Wallet</button>
+</div>
+
+<div class="panel">
+  <strong>1. Submit a specification</strong>
+  <label>Repository URL</label>
+  <input id="repoUrl" placeholder="https://github.com/example/vault" />
+  <label>Ref (commit SHA or PR number, e.g. "abc123" or "PR#42")</label>
+  <input id="ref" placeholder="abc123" />
+  <label>Requirements (one idea per line, plain language)</label>
+  <textarea id="reqText" placeholder="1. Unauthorized users must not be able to withdraw funds.&#10;2. Every withdrawal must emit an event.&#10;3. The contract must reject withdrawals above the user's balance."></textarea>
+  <button id="submitBtn">Submit Specification</button>
+</div>
+
+<div class="panel">
+  <strong>2. Run verification</strong>
+  <label>spec_id</label>
+  <input id="specIdInput" placeholder="spec_0" />
+  <div class="row">
+    <button id="freezeBtn">Freeze Evidence</button>
+  </div>
+  <div class="row">
+    <button id="decomposeBtn">Propose Decomposition</button>
+  </div>
+  <div class="row">
+    <button id="mapBtn">Propose Evidence Mapping</button>
+  </div>
+  <div class="row">
+    <button id="judgeBtn">Judge Requirements</button>
+  </div>
+  <div class="row">
+    <button id="aggregateBtn">Aggregate</button>
+  </div>
+  <div class="row">
+    <button id="refreshBtn" class="secondary">Refresh Status</button>
+  </div>
+  <div id="verificationStatus" class="status-line">No spec loaded yet.</div>
+  <div id="requirementsList"></div>
+</div>
+
+<div class="panel">
+  <strong>3. Challenge &amp; finalize</strong>
+  <label>requirement_id to challenge</label>
+  <input id="challengeReqId" placeholder="spec_0_req_1" />
+  <button id="challengeBtn">Challenge This Requirement</button>
+  <button id="finalizeBtn" class="secondary">Finalize</button>
+  <div id="attestationBox" class="status-line" style="display:none;"></div>
+</div>
+
+<div class="panel">
+  <strong>Log</strong>
+  <div id="log" class="log"></div>
+</div>
+
+<script type="module">
+  // --- IMPORTANT: known-working wallet pattern for a Rabby wallet inside
+  // the Mises mobile browser (established on the ModAppeal project).
+  //   - createClient({ chain, account }) alone is sufficient.
+  //   - Do NOT add a `provider:` option.
+  //   - Do NOT call client.connect() -- it calls a MetaMask-only Snaps
+  //     method (wallet_getSnaps) which fails outright on Rabby.
+  //   - Do NOT call client.initializeConsensusSmartContract().
+  //   - Do NOT repeat `account` inside individual writeContract() calls;
+  //     it's already bound at client creation.
+  // All three of the "don't"s above were tried on ModAppeal and were red
+  // herrings that either did nothing or actively broke things.
+  import {
+    createClient,
+    createAccount,
+    studionet,
+  } from "https://esm.sh/genlayer-js@latest";
+
+  // ---- fill this in once the contract is deployed on GenLayer Studio ----
+  const CONTRACT_ADDRESS = "0x5444d1A1d40809fbD082E442764E40016AA90d2D"; // deployed on GenLayer Studio
+
+  const logEl = document.getElementById("log");
+  function log(...args) {
+    const line = args.map(a => (typeof a === "string" ? a : JSON.stringify(a))).join(" ");
+    logEl.textContent += line + "\n";
+    logEl.scrollTop = logEl.scrollHeight;
+    console.log(...args);
+  }
+
+  let client = null;
+  let account = null;
+
+  async function connectWallet() {
+    if (!window.ethereum) {
+      log("No injected wallet found. Open this page inside a wallet browser (e.g. Rabby in Mises).");
+      return;
+    }
+    try {
+      const [address] = await window.ethereum.request({ method: "eth_requestAccounts" });
+      account = address;
+      client = createClient({ chain: studionet, account });
+      document.getElementById("walletStatus").textContent = `Connected: ${address}`;
+      log("Wallet connected:", address);
+    } catch (e) {
+      log("Wallet connection failed:", e.message || e);
+    }
+  }
+
+  document.getElementById("connectBtn").addEventListener("click", connectWallet);
+
+  function requireClient() {
+    if (!client) {
+      log("Connect your wallet first.");
+      return false;
+    }
+    return true;
+  }
+
+  async function writeContract(method, args) {
+    if (!requireClient()) return;
+    try {
+      log(`-> ${method}(${JSON.stringify(args)})`);
+      const txHash = await client.writeContract({
+        address: CONTRACT_ADDRESS,
+        functionName: method,
+        args,
+      });
+      log(`   tx: ${txHash}`);
+      const receipt = await client.waitForTransactionReceipt({ hash: txHash, status: "FINALIZED" });
+      log(`   result:`, receipt.result ?? receipt);
+      return receipt;
+    } catch (e) {
+      log(`   ERROR in ${method}:`, e.message || e);
+      throw e;
+    }
+  }
+
+  async function readContract(method, args) {
+    if (!requireClient()) return;
+    try {
+      const result = await client.readContract({
+        address: CONTRACT_ADDRESS,
+        functionName: method,
+        args,
+      });
+      return result;
+    } catch (e) {
+      log(`   ERROR reading ${method}:`, e.message || e);
+      throw e;
+    }
+  }
+
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    const repoUrl = document.getElementById("repoUrl").value.trim();
+    const ref = document.getElementById("ref").value.trim();
+    const reqText = document.getElementById("reqText").value.trim();
+    if (!repoUrl || !ref || !reqText) {
+      log("Fill in repository URL, ref, and requirements text first.");
+      return;
+    }
+    const receipt = await writeContract("submit_specification", [repoUrl, ref, reqText]);
+    if (receipt && receipt.result) {
+      document.getElementById("specIdInput").value = receipt.result;
+    }
+  });
+
+  document.getElementById("freezeBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    await writeContract("request_verification", [specId]);
+    await refreshStatus();
+  });
+
+  document.getElementById("decomposeBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    await writeContract("propose_decomposition", [specId]);
+    await refreshStatus();
+  });
+
+  document.getElementById("mapBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    await writeContract("propose_evidence_mapping", [specId]);
+    await refreshStatus();
+  });
+
+  document.getElementById("judgeBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    await writeContract("judge_requirements", [specId]);
+    await refreshStatus();
+  });
+
+  document.getElementById("aggregateBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    await writeContract("aggregate", [specId]);
+    await refreshStatus();
+  });
+
+  document.getElementById("refreshBtn").addEventListener("click", refreshStatus);
+
+  async function refreshStatus() {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return;
+    const v = await readContract("get_verification", [specId]);
+    if (!v) return;
+    const statusEl = document.getElementById("verificationStatus");
+    statusEl.textContent = `status: ${v.status}   final_verdict: ${v.final_verdict || "(pending)"}`;
+    statusEl.className = `status-line status-${v.final_verdict || v.status}`;
+
+    const listEl = document.getElementById("requirementsList");
+    listEl.innerHTML = "";
+    for (const rid of v.requirement_ids || []) {
+      const req = await readContract("get_requirement", [rid]);
+      if (!req) continue;
+      const card = document.createElement("div");
+      card.className = "req-card";
+      card.innerHTML = `
+        <div class="muted">${rid}</div>
+        <div>${req.text}</div>
+        <div class="verdict status-${req.verdict}">${req.verdict || "(unjudged)"}</div>
+        <div class="muted">${req.reason || ""}</div>
+        <div class="muted">round ${req.round}, challenges used: ${req.challenge_count}</div>
+      `;
+      listEl.appendChild(card);
+    }
+  }
+
+  document.getElementById("challengeBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    const reqId = document.getElementById("challengeReqId").value.trim();
+    if (!specId || !reqId) return log("Enter both spec_id and requirement_id.");
+    await writeContract("challenge", [specId, reqId]);
+    await refreshStatus();
+  });
+
+  document.getElementById("finalizeBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    const receipt = await writeContract("finalize", [specId]);
+    const box = document.getElementById("attestationBox");
+    if (receipt && receipt.result) {
+      box.style.display = "block";
+      box.textContent = receipt.result;
+    }
+    await refreshStatus();
+  });
+</script>
+
+</body>
+</html>
