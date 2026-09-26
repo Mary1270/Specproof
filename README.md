@@ -33,10 +33,28 @@ specification, SpecProof:
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the full design: state
 machine, data model, security model, and failure modes.
 
+## Live verification
+
+Deployed and fully exercised end-to-end on GenLayer Studio (StudioNet) at
+[`0x5444d1A1d40809fbD082E442764E40016AA90d2D`](https://explorer-studio.genlayer.com/address/0x5444d1A1d40809fbD082E442764E40016AA90d2D):
+
+| spec_id | repository | requirements | path | final result |
+|---|---|---|---|---|
+| `spec_0` | octocat/Hello-World @ `7fd1a60` | 1 | freeze → decomposition → mapping → judgment (FAIL) → aggregate → **challenge** (re-judged, still FAIL) → finalize | `FAILED`, `challenge_status: RESOLVED` |
+| `spec_2` | octocat/Spoon-Knife @ `bb4cc8d` | 2 (independent) | freeze → decomposition → mapping → judgment (both PASS) → aggregate → finalize | `VERIFIED`, `challenge_status: NONE` |
+
+Both `finalize()` calls returned a complete, hash-locked attestation
+(`spec_hash`, `evidence_root`, `decomposition_hash`, `mapping_hash`,
+per-requirement results) after their real 48-hour challenge windows
+elapsed. The frontend was also tested live against this deployment with a
+connected wallet (`get_verification`/`get_requirement` reads confirmed to
+match the Studio results exactly).
+
 ## Repository layout
 
 ```
 contracts/specproof.py      the Intelligent Contract
+contracts/specproof_deploy.py  comment-stripped build used for the Studio deploy
 tests/test_specproof.py     offline test suite (custom runner, no pip/pytest)
 tests/genlayer_stub.py      local stub of the GenLayer SDK used only by tests
 frontend/index.html         no-build frontend (genlayer-js via esm.sh)
@@ -73,12 +91,23 @@ Known-working wallet pattern (validated on this project's prior contracts):
 - Do not call `client.connect()` (fails on non-MetaMask wallets like Rabby).
 - Do not call `client.initializeConsensusSmartContract()`.
 - Do not repeat `account` inside individual `writeContract()` calls.
+- **`studionet` is exported from `genlayer-js/chains`, not from the
+  top-level `genlayer-js` package.** Importing it from the top-level
+  package (`import { createClient, createAccount, studionet } from
+  "genlayer-js"`) is a `SyntaxError` for a missing named export, which
+  silently kills the entire module script -- every button on the page just
+  does nothing, with no error visible outside the browser devtools console
+  (confirmed live: this is exactly what happened before the fix). Use:
+  ```js
+  import { createClient, createAccount } from "https://esm.sh/genlayer-js@latest";
+  import { studionet } from "https://esm.sh/genlayer-js@latest/chains";
+  ```
 
 After deploying `contracts/specproof.py` on GenLayer Studio, paste the
 deployed address into `CONTRACT_ADDRESS` near the top of
 `frontend/index.html`.
 
-## Known open items before deploying
+## Bugs found and fixed via live deployment (lessons learned)
 
 - **Confirmed via a real Studio deploy attempt:** `gl.nondet.exec_prompt(...,
   response_format="json")` returns an **already-parsed Python object**
