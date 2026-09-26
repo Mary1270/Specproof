@@ -152,6 +152,7 @@
   <input id="challengeReqId" placeholder="spec_0_req_1" />
   <button id="challengeBtn">Challenge This Requirement</button>
   <button id="finalizeBtn" class="secondary">Finalize</button>
+  <button id="getAttestationBtn" class="secondary">Get Attestation</button>
   <div id="attestationBox" class="status-line" style="display:none;"></div>
 </div>
 
@@ -348,6 +349,17 @@
       box.textContent = receipt.result;
     }
     await refreshStatus();
+  });
+
+  document.getElementById("getAttestationBtn").addEventListener("click", async () => {
+    const specId = document.getElementById("specIdInput").value.trim();
+    if (!specId) return log("Enter a spec_id first.");
+    const result = await readContract("get_attestation", [specId]);
+    const box = document.getElementById("attestationBox");
+    if (result) {
+      box.style.display = "block";
+      box.textContent = result;
+    }
   });
 </script>
 
