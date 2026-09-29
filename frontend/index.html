@@ -6,362 +6,469 @@
 <title>SpecProof</title>
 <style>
   :root {
-    --bg: #0b0d12;
-    --panel: #12151c;
-    --border: #262b36;
-    --text: #e6e9ef;
-    --muted: #8890a0;
-    --accent: #6ee7b7;
-    --fail: #f87171;
-    --warn: #fbbf24;
+    --bg: #0b0d12; --panel: #12151c; --panel-2: #0e1117; --border: #262b36;
+    --text: #e6e9ef; --muted: #8890a0; --accent: #6ee7b7; --fail: #f87171;
+    --warn: #fbbf24; --info: #93c5fd;
     --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
+  body { margin: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 16px;
-  }
-  h1 { font-size: 1.3rem; margin: 0 0 4px; }
-  .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 16px;
-  }
+    padding: 16px; max-width: 860px; margin-inline: auto; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 1.3rem; margin: 0; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  nav { display: flex; gap: 6px; margin: 14px 0 18px; flex-wrap: wrap; }
+  nav a { color: var(--muted); text-decoration: none; padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 0.85rem; }
+  nav a.active { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
   label { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 4px; }
-  input, textarea {
-    width: 100%;
-    background: #0e1117;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    padding: 8px 10px;
-    font-size: 0.9rem;
-    font-family: inherit;
-  }
-  textarea { min-height: 90px; resize: vertical; font-family: var(--mono); }
-  button {
-    background: var(--accent);
-    color: #06110c;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    margin-top: 12px;
-    width: 100%;
-  }
+  input, textarea { width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 9px 10px; font-size: 0.9rem; font-family: inherit; }
+  textarea { min-height: 110px; resize: vertical; font-family: var(--mono); }
+  button { background: var(--accent); color: #06110c; border: none; border-radius: 6px; padding: 10px 14px;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+  button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  button.small { padding: 6px 10px; font-size: 0.8rem; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.secondary {
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-  }
-  .row { display: flex; gap: 8px; }
-  .row > button { margin-top: 8px; }
-  .status-line {
-    font-family: var(--mono);
-    font-size: 0.85rem;
-    padding: 10px;
-    border-radius: 6px;
-    background: #0e1117;
-    border: 1px solid var(--border);
-    margin-top: 10px;
-    word-break: break-word;
-  }
-  .status-VERIFIED, .status-PASS { color: var(--accent); }
-  .status-FAILED, .status-FAIL { color: var(--fail); }
-  .status-INSUFFICIENT_EVIDENCE { color: var(--warn); }
-  .req-card {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    margin-top: 8px;
-    font-size: 0.85rem;
-  }
-  .req-card .verdict { font-family: var(--mono); font-weight: 700; }
   .muted { color: var(--muted); font-size: 0.8rem; }
-  .log {
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    color: var(--muted);
-    white-space: pre-wrap;
-    max-height: 160px;
-    overflow-y: auto;
-    margin-top: 8px;
-  }
+  .mono { font-family: var(--mono); word-break: break-all; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .grow { flex: 1; min-width: 160px; }
+  .badge { font-family: var(--mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .v-VERIFIED, .v-PASS { color: var(--accent); border-color: var(--accent); }
+  .v-FAILED, .v-FAIL { color: var(--fail); border-color: var(--fail); }
+  .v-INSUFFICIENT_EVIDENCE { color: var(--warn); border-color: var(--warn); }
+  .v-FINALIZED { color: var(--info); border-color: var(--info); }
+  .spec-row { display: block; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px;
+    text-decoration: none; color: var(--text); background: var(--panel-2); }
+  .spec-row:active { opacity: 0.8; }
+  .req { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 10px; background: var(--panel-2); }
+  .steps { display: flex; gap: 4px; flex-wrap: wrap; margin: 10px 0; }
+  .step { font-size: 0.7rem; padding: 3px 7px; border-radius: 4px; border: 1px solid var(--border); color: var(--muted); }
+  .step.done { color: var(--accent); border-color: var(--accent); }
+  .step.now { color: var(--bg); background: var(--warn); border-color: var(--warn); }
+  pre { background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+    overflow-x: auto; font-size: 0.75rem; white-space: pre-wrap; word-break: break-word; margin: 8px 0 0; }
+  .log { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: pre-wrap; max-height: 160px; overflow-y: auto; }
+  .notice { border-left: 3px solid var(--warn); padding: 8px 12px; background: var(--panel-2); border-radius: 4px; font-size: 0.85rem; }
+  .error { color: var(--fail); }
   a { color: var(--accent); }
+  details summary { cursor: pointer; color: var(--accent); font-size: 0.85rem; }
 </style>
 </head>
 <body>
 
-<h1>SpecProof</h1>
-<div class="subtitle">Evidence-based, consensus-verified software specification checking on GenLayer.</div>
+<header>
+  <div>
+    <h1>SpecProof</h1>
+    <div class="subtitle">Evidence-based, consensus-verified software specification checking on GenLayer.</div>
+  </div>
+  <div class="row">
+    <span id="walletStatus" class="muted">Not connected</span>
+    <button id="connectBtn" class="small">Connect wallet</button>
+  </div>
+</header>
+
+<nav>
+  <a href="#/" data-route="explore">Explore</a>
+  <a href="#/new" data-route="new">New verification</a>
+  <a href="#/about" data-route="about">How it works</a>
+</nav>
+
+<main id="view"></main>
 
 <div class="panel">
-  <div id="walletStatus" class="muted">Not connected.</div>
-  <button id="connectBtn">Connect Wallet</button>
-</div>
-
-<div class="panel">
-  <strong>1. Submit a specification</strong>
-  <label>Repository URL</label>
-  <input id="repoUrl" placeholder="https://github.com/example/vault" />
-  <label>Ref (commit SHA or PR number, e.g. "abc123" or "PR#42")</label>
-  <input id="ref" placeholder="abc123" />
-  <label>Requirements (one idea per line, plain language)</label>
-  <textarea id="reqText" placeholder="1. Unauthorized users must not be able to withdraw funds.&#10;2. Every withdrawal must emit an event.&#10;3. The contract must reject withdrawals above the user's balance."></textarea>
-  <button id="submitBtn">Submit Specification</button>
-</div>
-
-<div class="panel">
-  <strong>2. Run verification</strong>
-  <label>spec_id</label>
-  <input id="specIdInput" placeholder="spec_0" />
-  <div class="row">
-    <button id="freezeBtn">Freeze Evidence</button>
-  </div>
-  <div class="row">
-    <button id="decomposeBtn">Propose Decomposition</button>
-  </div>
-  <div class="row">
-    <button id="mapBtn">Propose Evidence Mapping</button>
-  </div>
-  <div class="row">
-    <button id="judgeBtn">Judge Requirements</button>
-  </div>
-  <div class="row">
-    <button id="aggregateBtn">Aggregate</button>
-  </div>
-  <div class="row">
-    <button id="refreshBtn" class="secondary">Refresh Status</button>
-  </div>
-  <div id="verificationStatus" class="status-line">No spec loaded yet.</div>
-  <div id="requirementsList"></div>
-</div>
-
-<div class="panel">
-  <strong>3. Challenge &amp; finalize</strong>
-  <label>requirement_id to challenge</label>
-  <input id="challengeReqId" placeholder="spec_0_req_1" />
-  <button id="challengeBtn">Challenge This Requirement</button>
-  <button id="finalizeBtn" class="secondary">Finalize</button>
-  <button id="getAttestationBtn" class="secondary">Get Attestation</button>
-  <div id="attestationBox" class="status-line" style="display:none;"></div>
-</div>
-
-<div class="panel">
-  <strong>Log</strong>
+  <strong>Activity log</strong>
   <div id="log" class="log"></div>
 </div>
 
 <script type="module">
-  // --- IMPORTANT: known-working wallet pattern for a Rabby wallet inside
-  // the Mises mobile browser (established on the ModAppeal project).
-  //   - createClient({ chain, account }) alone is sufficient.
-  //   - Do NOT add a `provider:` option.
-  //   - Do NOT call client.connect() -- it calls a MetaMask-only Snaps
-  //     method (wallet_getSnaps) which fails outright on Rabby.
-  //   - Do NOT call client.initializeConsensusSmartContract().
-  //   - Do NOT repeat `account` inside individual writeContract() calls;
-  //     it's already bound at client creation.
-  // All three of the "don't"s above were tried on ModAppeal and were red
-  // herrings that either did nothing or actively broke things.
-  import {
-    createClient,
-    createAccount,
-  } from "https://esm.sh/genlayer-js@latest";
-  import { studionet } from "https://esm.sh/genlayer-js@latest/chains";
+  // Wallet pattern known to work with Rabby inside the Mises browser:
+  //   - createClient({ chain, account }) alone; no `provider:` option,
+  //     no client.connect() (MetaMask-only Snaps call fails on Rabby),
+  //     no client.initializeConsensusSmartContract().
+  //   - `studionet` comes from genlayer-js/chains, NOT the top-level
+  //     package (a missing named export silently kills this whole module).
+  // All untrusted data (requirement text, LLM reasons, diff content) is
+  // rendered with textContent only, never innerHTML.
+  import { createClient } from "https://esm.sh/genlayer-js@1.1.8";
+  import { studionet } from "https://esm.sh/genlayer-js@1.1.8/chains";
 
-  // ---- fill this in once the contract is deployed on GenLayer Studio ----
-  const CONTRACT_ADDRESS = "0x5444d1A1d40809fbD082E442764E40016AA90d2D"; // deployed on GenLayer Studio
+  // v1.6 deployment on GenLayer Studio (StudioNet).
+  const CONTRACT_ADDRESS = "0x2a6be2C3752CB8b7b131dade3F39Dd355E96e619";
+  const EXPLORER = "https://explorer-studio.genlayer.com";
 
+  const readClient = createClient({ chain: studionet });
+  let writeClient = null;
+  let account = null;
+  let busy = false;
+
+  // ---------- small DOM helpers (text-only rendering) ----------
+  function el(tag, attrs = {}, ...children) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v === undefined || v === null || v === false) continue;
+      if (k === "class") node.className = v;
+      else if (k === "onclick") node.addEventListener("click", v);
+      else node.setAttribute(k, v);
+    }
+    for (const child of children.flat(Infinity)) {
+      if (child === undefined || child === null || child === false) continue;
+      node.appendChild(typeof child === "string" || typeof child === "number" ? document.createTextNode(String(child)) : child);
+    }
+    return node;
+  }
+  function badge(value) { return el("span", { class: `badge v-${value || ""}` }, value || "PENDING"); }
+  function safeGithubLink(url, text) {
+    // Only ever link to github.com; the contract enforces this too.
+    if (typeof url === "string" && /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(\/.*)?$/.test(url)) {
+      return el("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, text || url);
+    }
+    return el("span", {}, text || String(url));
+  }
   const logEl = document.getElementById("log");
   function log(...args) {
-    const line = args.map(a => (typeof a === "string" ? a : JSON.stringify(a))).join(" ");
+    const line = args.map(a => (typeof a === "string" ? a : JSON.stringify(a, (k, v) => typeof v === "bigint" ? v.toString() : v))).join(" ");
     logEl.textContent += line + "\n";
     logEl.scrollTop = logEl.scrollHeight;
-    console.log(...args);
+  }
+  function toPlain(value) {
+    // genlayer-js may hand back Maps for dict returns; normalize to plain objects.
+    if (value instanceof Map) return Object.fromEntries([...value.entries()].map(([k, v]) => [k, toPlain(v)]));
+    if (Array.isArray(value)) return value.map(toPlain);
+    if (typeof value === "bigint") return Number(value);
+    return value;
+  }
+  function fmtTime(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString();
+  }
+  function isPast(iso) { return !!iso && new Date(iso).getTime() < Date.now(); }
+
+  // Runs fn over items, `size` requests at a time, keeping the input order
+  // (parallel enough to be quick on a phone, without flooding the RPC).
+  async function inBatches(items, size, fn) {
+    const out = [];
+    for (let i = 0; i < items.length; i += size) out.push(...await Promise.all(items.slice(i, i + size).map(fn)));
+    return out;
   }
 
-  let client = null;
-  let account = null;
+  // ---------- contract access ----------
+  function contractConfigured() { return /^0x[0-9a-fA-F]{40}$/.test(CONTRACT_ADDRESS); }
+  async function read(method, args = []) {
+    const result = await readClient.readContract({ address: CONTRACT_ADDRESS, functionName: method, args });
+    return toPlain(result);
+  }
+  async function write(method, args) {
+    if (!writeClient) { log("Connect your wallet first."); throw new Error("wallet not connected"); }
+    if (busy) { log("A transaction is already in progress."); throw new Error("busy"); }
+    busy = true;
+    try {
+      log(`-> ${method}(${JSON.stringify(args)})`);
+      const hash = await writeClient.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args });
+      log(`   tx ${hash} submitted; waiting for consensus (LLM steps can take a few minutes)…`);
+      const receipt = await writeClient.waitForTransactionReceipt({ hash, status: "ACCEPTED", interval: 5000, retries: 120 });
+      const plain = toPlain(receipt);
+      const result = plain?.consensus_data?.leader_receipt?.[0]?.execution_result ?? plain?.result;
+      log(`   ${EXPLORER}/tx/${hash}`);
+      // A transaction can reach consensus while the contract itself raised
+      // (e.g. "invalid state"); report that as a failure, not a success.
+      if (typeof result === "string" && /error/i.test(result)) {
+        throw new Error(`the contract rejected ${method} (execution: ${result}); see the explorer link above`);
+      }
+      log(`   accepted. execution: ${typeof result === "string" ? result : JSON.stringify(result ?? "see explorer")}`);
+      return plain;
+    } finally {
+      busy = false;
+    }
+  }
 
   async function connectWallet() {
-    if (!window.ethereum) {
-      log("No injected wallet found. Open this page inside a wallet browser (e.g. Rabby in Mises).");
-      return;
-    }
+    if (!window.ethereum) { log("No injected wallet found. Open this page inside a wallet browser (e.g. Rabby in Mises)."); return; }
     try {
       const [address] = await window.ethereum.request({ method: "eth_requestAccounts" });
       account = address;
-      client = createClient({ chain: studionet, account });
-      document.getElementById("walletStatus").textContent = `Connected: ${address}`;
+      writeClient = createClient({ chain: studionet, account });
+      document.getElementById("walletStatus").textContent = `${address.slice(0, 6)}…${address.slice(-4)}`;
+      document.getElementById("connectBtn").textContent = "Connected";
       log("Wallet connected:", address);
     } catch (e) {
-      log("Wallet connection failed:", e.message || e);
+      log("Wallet connection failed:", e.message || String(e));
     }
   }
-
   document.getElementById("connectBtn").addEventListener("click", connectWallet);
 
-  function requireClient() {
-    if (!client) {
-      log("Connect your wallet first.");
-      return false;
-    }
-    return true;
+  // ---------- routing ----------
+  // Each render gets its own container. A slow render of a previous route
+  // (e.g. spec_1 still loading after the user opened spec_2) then writes
+  // into a detached element instead of mixing its panels and action
+  // buttons into the page now on screen.
+  const root = document.getElementById("view");
+  function route() {
+    const hash = location.hash || "#/";
+    let m;
+    if ((m = hash.match(/^#\/spec\/([A-Za-z0-9_]+)$/))) return { name: "spec", id: m[1] };
+    if (hash === "#/new") return { name: "new" };
+    if (hash === "#/about") return { name: "about" };
+    return { name: "explore" };
   }
-
-  async function writeContract(method, args) {
-    if (!requireClient()) return;
-    try {
-      log(`-> ${method}(${JSON.stringify(args)})`);
-      const txHash = await client.writeContract({
-        address: CONTRACT_ADDRESS,
-        functionName: method,
-        args,
-      });
-      log(`   tx: ${txHash}`);
-      const receipt = await client.waitForTransactionReceipt({ hash: txHash, status: "FINALIZED" });
-      log(`   result:`, receipt.result ?? receipt);
-      return receipt;
-    } catch (e) {
-      log(`   ERROR in ${method}:`, e.message || e);
-      throw e;
-    }
-  }
-
-  async function readContract(method, args) {
-    if (!requireClient()) return;
-    try {
-      const result = await client.readContract({
-        address: CONTRACT_ADDRESS,
-        functionName: method,
-        args,
-      });
-      return result;
-    } catch (e) {
-      log(`   ERROR reading ${method}:`, e.message || e);
-      throw e;
-    }
-  }
-
-  document.getElementById("submitBtn").addEventListener("click", async () => {
-    const repoUrl = document.getElementById("repoUrl").value.trim();
-    const ref = document.getElementById("ref").value.trim();
-    const reqText = document.getElementById("reqText").value.trim();
-    if (!repoUrl || !ref || !reqText) {
-      log("Fill in repository URL, ref, and requirements text first.");
+  async function render() {
+    const r = route();
+    for (const a of document.querySelectorAll("nav a")) a.classList.toggle("active", a.dataset.route === r.name);
+    const view = document.createElement("div");
+    root.replaceChildren(view);
+    if (!contractConfigured() && r.name !== "about") {
+      view.appendChild(el("div", { class: "panel notice" },
+        "This page is not connected to a contract yet. After deploying contracts/specproof_deploy.py on GenLayer Studio, set CONTRACT_ADDRESS near the top of frontend/index.html."));
       return;
     }
-    const receipt = await writeContract("submit_specification", [repoUrl, ref, reqText]);
-    if (receipt && receipt.result) {
-      document.getElementById("specIdInput").value = receipt.result;
+    try {
+      if (r.name === "spec") await renderSpec(view, r.id);
+      else if (r.name === "new") renderNew(view);
+      else if (r.name === "about") renderAbout(view);
+      else await renderExplore(view);
+    } catch (e) {
+      view.appendChild(el("div", { class: "panel error" }, `Could not load: ${e.message || String(e)}`));
+      log("load error:", e.message || String(e));
     }
-  });
+  }
+  window.addEventListener("hashchange", render);
 
-  document.getElementById("freezeBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    await writeContract("request_verification", [specId]);
-    await refreshStatus();
-  });
+  // ---------- Explore (browse all verifications) ----------
+  async function renderExplore(view) {
+    const panel = el("div", { class: "panel" });
+    const filter = el("input", { placeholder: "Filter by spec id, repository, commit or status…" });
+    const list = el("div", {});
+    const summary = el("div", { class: "muted" }, "Loading verifications…");
+    panel.append(el("h2", {}, "All verifications"), filter, el("div", { style: "height:10px" }), summary, list);
+    view.appendChild(panel);
 
-  document.getElementById("decomposeBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    await writeContract("propose_decomposition", [specId]);
-    await refreshStatus();
-  });
+    // list_specs is paginated (newest first, at most 100 per call).
+    const [total, ids] = await Promise.all([read("spec_count"), read("list_specs", [0, 60])]);
+    const specs = (await inBatches(ids, 8, id => read("get_spec", [id]).catch(e => {
+      log(`could not read ${id}:`, e.message || String(e)); return null;
+    }))).filter(Boolean);
+    function draw() {
+      const q = filter.value.trim().toLowerCase();
+      const shown = specs.filter(s => !q || [s.spec_id, s.repository_url, s.ref, s.commit_sha, s.status, s.final_verdict].join(" ").toLowerCase().includes(q));
+      summary.textContent = specs.length === 0 ? "No verifications yet — start one from “New verification”." : `${shown.length} of ${specs.length} shown` + (Number(total) > specs.length ? ` (newest ${specs.length} of ${total})` : "");
+      list.replaceChildren(...shown.map(s => el("a", { class: "spec-row", href: `#/spec/${s.spec_id}` },
+        el("div", { class: "row" }, el("strong", { class: "mono" }, s.spec_id), badge(s.status), s.final_verdict && s.final_verdict !== s.status ? badge(s.final_verdict) : null),
+        el("div", { class: "muted", style: "margin-top:6px" }, `${s.repository_url.replace("https://github.com/", "")} @ ${s.ref}`),
+        el("div", { class: "muted" }, `submitted ${fmtTime(s.created_at)}`))));
+    }
+    filter.addEventListener("input", draw);
+    draw();
+  }
 
-  document.getElementById("mapBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    await writeContract("propose_evidence_mapping", [specId]);
-    await refreshStatus();
-  });
+  // ---------- New verification ----------
+  function renderNew(view) {
+    const repo = el("input", { placeholder: "https://github.com/owner/repo" });
+    const ref = el("input", { placeholder: "full 40-character commit sha, or PR#123" });
+    const text = el("textarea", { placeholder: "1. Unauthorized users must not be able to withdraw funds.\n2. Every withdrawal must emit an event." });
+    const btn = el("button", {}, "Submit specification");
+    const msg = el("div", { class: "muted", style: "margin-top:8px" });
+    btn.addEventListener("click", async () => {
+      const r = repo.value.trim(), f = ref.value.trim(), t = text.value.trim();
+      if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/.test(r)) { msg.textContent = "Repository must be https://github.com/<owner>/<repo>."; return; }
+      if (!/^([0-9a-fA-F]{40}|(PR#|pr#|pull\/)[1-9][0-9]{0,9})$/.test(f)) { msg.textContent = "Ref must be a full 40-character commit sha or PR#<number>. Branch names and short shas are rejected because they can change meaning."; return; }
+      if (!t) { msg.textContent = "Write at least one requirement."; return; }
+      btn.disabled = true;
+      try {
+        const before = await read("list_specs", [0, 20]);
+        await write("submit_specification", [r, f, t]);
+        const after = await read("list_specs", [0, 20]);
+        const created = after.find(id => !before.includes(id)) || after[0];
+        location.hash = `#/spec/${created}`;
+      } catch (e) {
+        msg.textContent = `Failed: ${e.message || String(e)}`;
+      } finally { btn.disabled = false; }
+    });
+    view.appendChild(el("div", { class: "panel" },
+      el("h2", {}, "New verification"),
+      el("label", {}, "Repository"), repo,
+      el("label", {}, "Commit sha or pull request"), ref,
+      el("label", {}, "Requirements (plain language)"), text,
+      el("div", { style: "margin-top:12px" }, btn), msg));
+  }
 
-  document.getElementById("judgeBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    await writeContract("judge_requirements", [specId]);
-    await refreshStatus();
-  });
+  // ---------- Spec detail ----------
+  const PIPELINE = [
+    ["SPEC_REGISTERED", "Submitted"], ["EVIDENCE_FROZEN", "Evidence frozen"], ["DECOMPOSITION_AGREED", "Decomposed"],
+    ["MAPPING_AGREED", "Evidence mapped"], ["JUDGED", "Judged"], ["AGGREGATED", "Aggregated"], ["FINALIZED", "Finalized"],
+  ];
+  function stageIndex(status) {
+    if (["VERIFIED", "FAILED", "INSUFFICIENT_EVIDENCE"].includes(status)) return 5;
+    const i = PIPELINE.findIndex(([s]) => s === status);
+    return i === -1 ? 0 : i;
+  }
 
-  document.getElementById("aggregateBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    await writeContract("aggregate", [specId]);
-    await refreshStatus();
-  });
+  async function renderSpec(view, id) {
+    const [spec, ver] = await Promise.all([read("get_spec", [id]), read("get_verification", [id])]);
+    const reqs = await inBatches(ver.requirement_ids || [], 8, rid => read("get_requirement", [rid]));
+    const status = ver.status;
+    const aggregated = ["VERIFIED", "FAILED", "INSUFFICIENT_EVIDENCE"].includes(status);
+    const windowOpen = aggregated && !isPast(ver.challenge_deadline);
 
-  document.getElementById("refreshBtn").addEventListener("click", refreshStatus);
+    // Header
+    const head = el("div", { class: "panel" },
+      el("a", { href: "#/" }, "← All verifications"),
+      el("div", { class: "row", style: "margin-top:10px" }, el("h2", { class: "mono", style: "margin:0" }, spec.spec_id), badge(status),
+        ver.final_verdict && ver.final_verdict !== status ? badge(ver.final_verdict) : null),
+      el("div", { class: "steps" }, PIPELINE.map(([s, label], i) => {
+        const cur = stageIndex(status);
+        const failed = ["DECOMPOSITION_FAILED", "MAPPING_FAILED"].includes(status);
+        return el("span", { class: `step ${!failed && i < cur ? "done" : ""} ${!failed && i === cur ? "now" : ""}` }, label);
+      })),
+      el("div", { class: "muted" }, "Repository: ", safeGithubLink(spec.repository_url, spec.repository_url.replace("https://github.com/", ""))),
+      el("div", { class: "muted" }, "Ref: ", el("span", { class: "mono" }, spec.ref),
+        spec.commit_sha ? [" → pinned commit ", safeGithubLink(`${spec.repository_url}/commit/${spec.commit_sha}`, spec.commit_sha.slice(0, 12))] : null),
+      el("div", { class: "muted" }, "Submitter: ", el("span", { class: "mono" }, spec.submitter)),
+      el("details", { style: "margin-top:8px" }, el("summary", {}, "Specification text"), el("pre", {}, spec.requirements_text)),
+    );
+    view.appendChild(head);
 
-  async function refreshStatus() {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return;
-    const v = await readContract("get_verification", [specId]);
-    if (!v) return;
-    const statusEl = document.getElementById("verificationStatus");
-    statusEl.textContent = `status: ${v.status}   final_verdict: ${v.final_verdict || "(pending)"}`;
-    statusEl.className = `status-line status-${v.final_verdict || v.status}`;
+    // Next action (only the step that is valid now)
+    view.appendChild(renderNextAction(spec, ver, reqs, windowOpen));
 
-    const listEl = document.getElementById("requirementsList");
-    listEl.innerHTML = "";
-    for (const rid of v.requirement_ids || []) {
-      const req = await readContract("get_requirement", [rid]);
-      if (!req) continue;
-      const card = document.createElement("div");
-      card.className = "req-card";
-      card.innerHTML = `
-        <div class="muted">${rid}</div>
-        <div>${req.text}</div>
-        <div class="verdict status-${req.verdict}">${req.verdict || "(unjudged)"}</div>
-        <div class="muted">${req.reason || ""}</div>
-        <div class="muted">round ${req.round}, challenges used: ${req.challenge_count}</div>
-      `;
-      listEl.appendChild(card);
+    // Requirements
+    if (reqs.length) {
+      const panel = el("div", { class: "panel" }, el("h2", {}, `Requirements (${reqs.length})`));
+      for (const r of reqs) panel.appendChild(renderRequirement(id, r, spec, status, windowOpen));
+      view.appendChild(panel);
+    }
+
+    // Evidence
+    if (spec.excerpts && spec.excerpts.length) {
+      const panel = el("div", { class: "panel" }, el("h2", {}, "Frozen evidence"),
+        el("div", { class: "muted mono" }, `evidence root ${spec.evidence_root}`),
+        el("div", { class: "muted" }, `frozen ${fmtTime(spec.frozen_at)}`));
+      for (const ex of spec.excerpts) panel.appendChild(renderExcerpt(ex));
+      view.appendChild(panel);
+    }
+
+    // Attestation
+    if (status === "FINALIZED") {
+      const att = await read("get_attestation", [id]);
+      let pretty = att;
+      try { pretty = JSON.stringify(JSON.parse(att), null, 2); } catch (_) {}
+      view.appendChild(el("div", { class: "panel" }, el("h2", {}, "Attestation"),
+        el("div", { class: "muted" }, "For this specification hash and evidence snapshot, GenLayer validators reached the requirement-level result below. It does not claim the code is correct."),
+        el("pre", {}, pretty)));
     }
   }
 
-  document.getElementById("challengeBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    const reqId = document.getElementById("challengeReqId").value.trim();
-    if (!specId || !reqId) return log("Enter both spec_id and requirement_id.");
-    await writeContract("challenge", [specId, reqId]);
-    await refreshStatus();
-  });
+  function actionButton(label, method, args, cls) {
+    const b = el("button", { class: cls || "" }, label);
+    b.addEventListener("click", async () => {
+      b.disabled = true;
+      try { await write(method, args); } catch (e) { log(`${method} failed:`, e.message || String(e)); }
+      finally { b.disabled = false; render(); }
+    });
+    return b;
+  }
 
-  document.getElementById("finalizeBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    const receipt = await writeContract("finalize", [specId]);
-    const box = document.getElementById("attestationBox");
-    if (receipt && receipt.result) {
-      box.style.display = "block";
-      box.textContent = receipt.result;
+  function renderNextAction(spec, ver, reqs, windowOpen) {
+    const id = spec.spec_id, s = ver.status;
+    const panel = el("div", { class: "panel" }, el("h2", {}, "Next step"));
+    const add = (...nodes) => panel.appendChild(el("div", { class: "row", style: "margin-top:6px" }, ...nodes));
+    const deadline = (label, iso) => el("div", { class: "muted", style: "margin-top:8px" }, `${label}: ${fmtTime(iso)}${isPast(iso) ? " (passed)" : ""}`);
+    if (s === "SPEC_REGISTERED") {
+      // Only the submitter may choose when evidence is frozen (a PR author
+      // could otherwise freeze at a moment of their choosing).
+      const mine = account && String(spec.submitter).toLowerCase() === String(account).toLowerCase();
+      add(actionButton("Freeze evidence from GitHub", "request_verification", [id]));
+      panel.appendChild(el("div", { class: "muted", style: "margin-top:8px" },
+        mine ? "You submitted this specification, so you choose when the evidence is frozen."
+             : `Only the submitter (${spec.submitter}) can freeze the evidence${account ? "" : " — connect that wallet"}.`));
     }
-    await refreshStatus();
-  });
+    else if (s === "EVIDENCE_FROZEN") {
+      add(actionButton("Propose decomposition", "propose_decomposition", [id]));
+      panel.appendChild(deadline("Decomposition deadline", ver.decomposition_deadline));
+      if (isPast(ver.decomposition_deadline)) add(actionButton("Resolve timeout", "expire_if_timed_out", [id], "secondary"));
+    } else if (s === "DECOMPOSITION_AGREED") {
+      add(actionButton("Propose evidence mapping", "propose_evidence_mapping", [id]));
+      panel.appendChild(deadline("Mapping deadline", ver.mapping_deadline));
+      if (isPast(ver.mapping_deadline)) add(actionButton("Resolve timeout", "expire_if_timed_out", [id], "secondary"));
+    } else if (s === "MAPPING_AGREED") {
+      add(actionButton("Judge all remaining requirements", "judge_requirements", [id]));
+      panel.appendChild(el("div", { class: "muted", style: "margin-top:6px" }, "Or judge one requirement at a time from its card below."));
+      panel.appendChild(deadline("Judgment deadline", ver.judgment_deadline));
+      if (isPast(ver.judgment_deadline)) add(actionButton("Resolve timeout", "expire_if_timed_out", [id], "secondary"));
+    } else if (s === "JUDGED") add(actionButton("Aggregate verdicts", "aggregate", [id]));
+    else if (["VERIFIED", "FAILED", "INSUFFICIENT_EVIDENCE"].includes(s)) {
+      panel.appendChild(deadline("Challenge window closes", ver.challenge_deadline));
+      if (windowOpen) panel.appendChild(el("div", { class: "muted", style: "margin-top:6px" },
+        "Each requirement can be challenged once. A verdict survives only if an independent re-judgment reproduces it; otherwise it becomes INSUFFICIENT_EVIDENCE. A challenge can never flip PASS to FAIL or FAIL to PASS. A requirement whose first real judgment came from a challenge (after a timeout) can be challenged once more."));
+      else add(actionButton("Finalize and publish attestation", "finalize", [id]));
+    } else if (s === "FINALIZED") panel.appendChild(el("div", { class: "muted" }, "Finalized — the attestation is below."));
+    else panel.appendChild(el("div", { class: "muted" }, `Terminal state: ${s}. Submit a clearer specification as a new verification.`));
+    return panel;
+  }
 
-  document.getElementById("getAttestationBtn").addEventListener("click", async () => {
-    const specId = document.getElementById("specIdInput").value.trim();
-    if (!specId) return log("Enter a spec_id first.");
-    const result = await readContract("get_attestation", [specId]);
-    const box = document.getElementById("attestationBox");
-    if (result) {
-      box.style.display = "block";
-      box.textContent = result;
+  function renderRequirement(specId, r, spec, status, windowOpen) {
+    const card = el("div", { class: "req" },
+      el("div", { class: "row" }, el("span", { class: "muted mono" }, r.requirement_id), badge(r.verdict || "PENDING"),
+        r.origin ? el("span", { class: "badge" }, r.origin) : null,
+        r.challenge_count > 0 ? el("span", { class: "badge" }, r.late_judged && r.challenge_count === 1 ? "late judgment" : "challenged") : null),
+      el("div", { style: "margin-top:6px" }, r.text));
+    if (r.reason) card.appendChild(el("div", { class: "muted", style: "margin-top:6px" }, r.reason));
+    if (r.cited_evidence && r.cited_evidence.length) {
+      card.appendChild(el("div", { class: "muted", style: "margin-top:6px" }, "Cites: ",
+        r.cited_evidence.map((eid, i) => [i ? ", " : "", el("span", { class: "mono" }, fileFor(spec, eid))])));
     }
-  });
+    if (r.challenged_by) card.appendChild(el("div", { class: "muted mono" }, `challenged by ${r.challenged_by}`));
+    const actions = el("div", { class: "row", style: "margin-top:8px" });
+    if (status === "MAPPING_AGREED" && r.status === "PENDING") actions.appendChild(actionButton("Judge this requirement", "judge_requirement", [specId, r.requirement_id], "small"));
+    // Mirrors the contract: one challenge per requirement, plus one more if the
+    // first "challenge" only produced a late first judgment.
+    const canChallenge = r.challenge_count === 0 || (r.challenge_count === 1 && r.late_judged === true && r.origin === "CONSENSUS");
+    if (windowOpen && canChallenge) actions.appendChild(actionButton("Challenge", "challenge", [specId, r.requirement_id], "small secondary"));
+    if (actions.childNodes.length) card.appendChild(actions);
+    return card;
+  }
+
+  function fileFor(spec, eid) {
+    const ex = (spec.excerpts || []).find(e => e.excerpt_id === eid);
+    return ex ? ex.file_path : eid;
+  }
+
+  function renderExcerpt(ex) {
+    const body = el("div", {});
+    const det = el("details", { style: "margin-top:8px" },
+      el("summary", {}, `${ex.file_path} (${ex.line_count} lines)`),
+      el("div", { class: "muted mono" }, `${ex.excerpt_id} · sha256 ${ex.content_hash}`), body);
+    det.addEventListener("toggle", async () => {
+      if (!det.open || body.childNodes.length) return;
+      try {
+        const full = await read("get_excerpt", [ex.excerpt_id]);
+        body.appendChild(el("pre", {}, full.content));
+      } catch (e) { body.appendChild(el("div", { class: "error" }, e.message || String(e))); }
+    });
+    return det;
+  }
+
+  // ---------- About ----------
+  function renderAbout(view) {
+    const steps = [
+      "Submit a public GitHub repository, a full commit sha or PR#number, and plain-language requirements.",
+      "Freeze evidence (submitter only): validators fetch the exact diff (a PR is pinned to its base…head commits) and hash it.",
+      "Decomposition: the leader proposes independent requirements; every validator checks the proposal is well-formed and independently reviews that it is faithful to the specification.",
+      "Evidence mapping: each requirement is mapped to the diff excerpts relevant to it; validators reject unknown excerpts and review that the mapping is faithful.",
+      "Judgment: each requirement gets PASS / FAIL / INSUFFICIENT_EVIDENCE; every validator re-judges independently and must reach the identical verdict. A PASS on a file too large for the judge to read in full is withheld as INSUFFICIENT_EVIDENCE.",
+      "Aggregation is strict: any FAIL → FAILED, otherwise any INSUFFICIENT → INSUFFICIENT_EVIDENCE, otherwise VERIFIED.",
+      "48-hour challenge window: one challenge per requirement; a verdict that does not reproduce becomes INSUFFICIENT_EVIDENCE, so a challenge can never flip PASS and FAIL.",
+      "Finalize: a hash-locked attestation is published. It says what the evidence supports, not that the code is bug-free.",
+    ];
+    view.appendChild(el("div", { class: "panel" }, el("h2", {}, "How SpecProof works"),
+      el("ol", {}, steps.map(s => el("li", { style: "margin:6px 0" }, s))),
+      el("div", { class: "muted" }, "Source: ", safeGithubLink("https://github.com/Mary1270/Specproof", "github.com/Mary1270/Specproof"))));
+  }
+
+  render();
 </script>
-
 </body>
 </html>
