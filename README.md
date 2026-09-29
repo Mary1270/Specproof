@@ -95,6 +95,9 @@ the attack tree):
 
 ## Try it
 
+Live frontend: https://mary1270.github.io/Specproof/frontend/ (contract
+`0x2a6be2C3752CB8b7b131dade3F39Dd355E96e619` on GenLayer StudioNet).
+
 The frontend is a single file, `frontend/index.html`, with no build step.
 It reads without a wallet and uses Rabby (for example inside the Mises
 browser) for writes. It lists every verification, shows the next valid
@@ -211,6 +214,24 @@ re-judged independently and reproduced FAIL ("only 'README' was modified …
 merely a whitespace adjustment. No license file was added."), so the
 verdict was kept — reproduce-or-downgrade confirmed live on a FAIL as well
 as on a PASS (v1.4 run, step 7).
+
+The whole pipeline was then driven from the hosted frontend with a real
+wallet (Rabby), on the same v1.6 contract, for `spec_1` (Spoon-Knife,
+`bb4cc8d3…d00b7f`, the two requirements from the example above). Every step
+was submitted from the UI and accepted with execution result SUCCESS:
+
+| Step (button in the UI) | Result |
+|---|---|
+| Submit specification | `spec_1` registered, submitter shown |
+| Freeze evidence from GitHub | 2 excerpts (README.md 15 lines, styles.css 23 lines); `evidence_root` `55e74a6d…0da87`, equal to the SHA-256 computed offline from the exact GitHub file |
+| Propose decomposition | 2 requirements, texts identical to the submitted ones |
+| Propose evidence mapping | accepted by validator review |
+| Judge all remaining requirements | stylesheet: PASS (cites `styles.css`); README: INSUFFICIENT_EVIDENCE ("unclear what 'the change' refers to"), both by consensus |
+| Aggregate verdicts | `INSUFFICIENT_EVIDENCE` (strict aggregation), 48 h challenge window opened with its closing time shown |
+
+The frontend also showed the challenge button on both verdicts, the pinned
+commit, the frozen excerpts and the deadline of every stage, all read
+directly from the contract.
 
 ## Implementation vs ARCHITECTURE.md
 
