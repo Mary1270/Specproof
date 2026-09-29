@@ -12,5 +12,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Deploy build is current and equivalent to the audited source
+        run: python3 tools/build_deploy.py --check
       - name: Run offline test suite (no external dependencies)
         run: python3 tests/test_specproof.py
+      - name: Run invariant fuzzer (400 seeded runs x 80 steps)
+        run: python3 tests/test_fuzz.py
+      - name: Mutation test (each re-introduced vulnerability must be caught)
+        run: python3 tests/mutation_test.py
